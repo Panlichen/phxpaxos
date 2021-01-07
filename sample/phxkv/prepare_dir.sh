@@ -1,3 +1,15 @@
+if [ -d "storage" ]; then
+
+ rm -rf storage
+
+fi
+
+if [ -d "log" ]; then
+
+ rm -rf log
+
+fi
+
 #create kvdb path and paxoslog path
 mkdir storage
 cd storage

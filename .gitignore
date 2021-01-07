@@ -16,3 +16,4 @@ leveldb/
 protobuf/
 Makefile
 lib/
+storage/
