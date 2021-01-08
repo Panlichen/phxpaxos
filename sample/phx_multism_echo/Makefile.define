@@ -1,0 +1,11 @@
+allobject=phx_multism_echo
+
+PHX_MULTISM_ECHO_OBJ=multism_echo_sm.o multism_echo_server.o main.o
+
+PHX_MULTISM_ECHO_LIB=
+
+PHX_MULTISM_ECHO_SYS_LIB=$(PHXPAXOS_LIB_PATH)/libphxpaxos_plugin.a $(PHXPAXOS_LIB_PATH)/libphxpaxos.a $(LEVELDB_LIB_PATH)/libleveldb.a $(PROTOBUF_LIB_PATH)/libprotobuf.a $(GLOG_LIB_PATH)/libglog.a $(GFLAGS_LIB_PATH)/libgflags.a -lpthread
+
+PHX_MULTISM_ECHO_INCS=$(SRC_BASE_PATH)/sample/phx_multism_echo  $(PHXPAXOS_PLUGIN_PATH) $(PHXPAXOS_INCLUDE_PATH) $(LEVELDB_INCLUDE_PATH) $(PROTOBUF_INCLUDE_PATH)
+
+PHX_MULTISM_ECHO_EXTRA_CPPFLAGS=-Wall -Werror
