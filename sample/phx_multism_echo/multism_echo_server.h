@@ -12,7 +12,7 @@ namespace phx_multism_echo
 class PhxMultismEchoServer
 {
 public:
-    PhxMultismEchoServer(const phxpaxos::NodeInfo & oMyNode, const phxpaxos::NodeInfoList & vecNodeList, int num_group, int num_sm_per_group);
+    PhxMultismEchoServer(const phxpaxos::NodeInfo & oMyNode, const phxpaxos::NodeInfoList & vecNodeList, int num_group, int num_sm_per_group, int num_io_thread);
     ~PhxMultismEchoServer();
 
     int RunPaxos();
@@ -29,6 +29,9 @@ private:
 
     int num_group;
     int num_sm_per_group;
+    int num_io_thread;
+
+    bool bUseBatch;
 
 };
 

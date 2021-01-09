@@ -12,7 +12,7 @@ using namespace std;
 
 namespace phx_multism_echo
 {
-PhxMultismEchoServer :: PhxMultismEchoServer(const phxpaxos::NodeInfo & oMyNode, const phxpaxos::NodeInfoList & vecNodeList, int num_group, int num_sm_per_group) : m_oMyNode(oMyNode), m_vecNodeList(vecNodeList), m_poPaxosNode(nullptr), num_group(num_group), num_sm_per_group(num_sm_per_group){}
+PhxMultismEchoServer :: PhxMultismEchoServer(const phxpaxos::NodeInfo & oMyNode, const phxpaxos::NodeInfoList & vecNodeList, int num_group, int num_sm_per_group, int num_io_thread) : m_oMyNode(oMyNode), m_vecNodeList(vecNodeList), m_poPaxosNode(nullptr), num_group(num_group), num_sm_per_group(num_sm_per_group), num_io_thread(num_io_thread), bUseBatch(false){}
 
 PhxMultismEchoServer :: ~PhxMultismEchoServer()
 {
@@ -49,6 +49,8 @@ int PhxMultismEchoServer :: RunPaxos()
         return ret;
     }
     oOptions.iGroupCount = num_group;
+    oOptions.iIOThreadCount = num_io_thread;
+    oOptions.bUseBatchPropose = bUseBatch;
 
     oOptions.oMyNode = m_oMyNode;
     oOptions.vecNodeInfoList = m_vecNodeList;
@@ -84,6 +86,15 @@ int PhxMultismEchoServer :: RunPaxos()
         return ret;
     }
 
+    if (bUseBatch) {
+        for (int i = 0; i < num_group; i++)
+        {
+            m_poPaxosNode->SetBatchCount(i, 100);
+            m_poPaxosNode->SetBatchDelayTimeMs(i, 2);
+        }
+    }
+
+
     printf("run paxos ok\n");
     return 0;
 }
@@ -91,6 +102,7 @@ int PhxMultismEchoServer :: RunPaxos()
 int PhxMultismEchoServer :: Echo(const int seq_no, const std::string & sEchoReqValue, std::string & sEchoRespValue)
 {
     uint64_t llInstanceID = 0;
+    uint32_t iBatchIndex = 0;
     SMCtx oCtx;
     //smid must same to PhxEchoSM.SMID().
 
@@ -101,8 +113,15 @@ int PhxMultismEchoServer :: Echo(const int seq_no, const std::string & sEchoReqV
 
     oCtx.m_iSMID = sm_id;
 
-    // choose group by seq_no, TODO: do not know how to choose SM yet.
-    int ret = m_poPaxosNode->Propose(group_id, sEchoReqValue, llInstanceID, &oCtx);
+    int ret = 0;
+    if (bUseBatch) {
+        ret = m_poPaxosNode->BatchPropose(group_id, sEchoReqValue, llInstanceID, iBatchIndex, &oCtx);
+    }
+    else 
+    {
+        ret = m_poPaxosNode->Propose(group_id, sEchoReqValue, llInstanceID, &oCtx);
+    }
+    
 
     if (ret != 0)
     {
@@ -110,7 +129,15 @@ int PhxMultismEchoServer :: Echo(const int seq_no, const std::string & sEchoReqV
         return ret;
     }
 
-    printf("propose message %d to (group %d, sm %d) successfully, instanceid %lu\n", seq_no, group_id, sm_id, llInstanceID);
+    if (bUseBatch)
+    {
+        printf("BATCH! propose message %d to (group %d, sm %d) successfully, instanceid %lu, batch index %d\n", seq_no, group_id, sm_id, llInstanceID, iBatchIndex);
+    }
+    else 
+    {
+        printf("propose message %d to (group %d, sm %d) successfully, instanceid %lu\n", seq_no, group_id, sm_id, llInstanceID);
+    }
+    
     sEchoRespValue = to_string(sEchoReqValue.size());
 
     return 0;
